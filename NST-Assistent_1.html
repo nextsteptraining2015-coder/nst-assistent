@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NST — Persoonlijke Assistent</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --border: #E2E0D8;
+    --border-strong: #C8C6BC;
+    --text: #1A1A18;
+    --text-muted: #6B6A65;
+    --text-hint: #A09F9A;
+    --accent: #1A1A18;
+    --accent-light: #F0EFE8;
+    --green: #2D7A4F;
+    --green-bg: #EAF4EE;
+    --orange: #B85C1A;
+    --orange-bg: #FBF0E8;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --blue: #185FA5;
+    --blue-bg: #E6F1FB;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+  .logo span { color: var(--text-muted); font-weight: 400; }
+
+  .badge-count {
+    background: var(--text);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 12px;
+    padding: 2px 9px;
+    font-weight: 500;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 20px;
+  }
+
+  .tab {
+    padding: 11px 16px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+    transition: color 0.15s;
+  }
+
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--text);
+    font-weight: 500;
+  }
+
+  main { padding: 20px; max-width: 600px; margin: 0 auto; }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 10px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.55;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  textarea:focus { border-color: var(--text); }
+
+  .mic-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 16px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mic-btn:active { opacity: 0.8; }
+  .mic-btn.recording { background: var(--red); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
+
+  .mic-status {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 8px;
+    min-height: 18px;
+  }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+
+  .btn {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 500;
+    transition: background 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn:hover { background: var(--accent-light); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+  .btn-primary:hover { background: #333; }
+
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .field-full { grid-column: 1 / -1; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    min-height: unset;
+  }
+
+  .field input:focus, .field select:focus { border-color: var(--text); }
+
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 10px 0;
+    justify-content: center;
+  }
+
+  .dot { display: inline-block; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
+
+  .mail-preview {
+    display: none;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border);
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-muted);
+    margin-top: 10px;
+    white-space: pre-wrap;
+  }
+
+  .mail-preview strong { color: var(--text); }
+
+  /* TASK LIST */
+  .task-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .task-item:last-child { border-bottom: none; }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    flex-shrink: 0;
+    border: 0.5px solid var(--border);
+  }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .task-meta { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .pill-open { background: var(--orange-bg); color: var(--orange); }
+  .pill-progress { background: var(--blue-bg); color: var(--blue); }
+  .pill-done { background: var(--green-bg); color: var(--green); }
+
+  .task-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+
+  select.status-mini {
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-strong);
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-hint);
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.12s;
+  }
+
+  .icon-btn:hover { color: var(--red); }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-hint);
+    font-size: 14px;
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* DAILY SUMMARY SECTION */
+  .summary-bar {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .summary-info { font-size: 13px; color: var(--text-muted); }
+  .summary-info strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
+
+  .time-input {
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    width: 90px;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.12s;
+    font-weight: 500;
+  }
+
+  .filter-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  #task-form { display: none; }
+
+  @media (max-width: 480px) {
+    main { padding: 12px; }
+    .field-grid { grid-template-columns: 1fr; }
+    .field-full { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NST <span>Assistent</span></div>
+  <span class="badge-count" id="open-count">0 open</span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('nieuw')">Nieuwe taak</button>
+  <button class="tab" onclick="showTab('overzicht')">Overzicht</button>
+  <button class="tab" onclick="showTab('dagmail')">Dagmail</button>
+</div>
+
+<main>
+
+  <!-- TAB: NIEUWE TAAK -->
+  <div id="tab-nieuw">
+    <div class="card">
+      <div class="card-label">Spreek of typ je opdracht</div>
+      <textarea id="input-text" placeholder="Bijv: Koen moet vrijdag de facturen van juni controleren en doorsturen naar de boekhouder..."></textarea>
+      <button class="mic-btn" id="mic-btn" onclick="toggleMic()">
+        <span id="mic-icon">🎤</span>
+        <span id="mic-label">Inspreken</span>
+      </button>
+      <div class="mic-status" id="mic-status"></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-primary" onclick="analyzeTask()">✦ Analyseer taak</button>
+      </div>
+      <div class="loading" id="ai-loading">
+        <span class="dot">●</span><span class="dot">●</span><span class="dot">●</span>
+        <span>Claude analyseert...</span>
+      </div>
+    </div>
+
+    <div class="card" id="task-form">
+      <div class="card-label">Controleer en verstuur</div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Toegewezen aan</label>
+          <select id="f-person">
+            <option value="Koen|koen@nextsteptraining.nl">Koen</option>
+            <option value="Ilona|davesmit@ziggo.nl">Ilona</option>
+            <option value="Philip|Among-Strong@hotmail.com">Philip</option>
+            <option value="Mariska|mariskaruyterpt@gmail.com">Mariska</option>
+            <option value="Ely|mediabyink@gmail.com">Ely</option>
+            <option value="Daan|hofferdaan@gmail.com">Daan</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Deadline</label>
+          <input type="date" id="f-deadline" />
+        </div>
+        <div class="field field-full">
+          <label>Taakomschrijving</label>
+          <input type="text" id="f-task" placeholder="Wat moet er gedaan worden?" />
+        </div>
+        <div class="field field-full">
+          <label>Extra notities (optioneel)</label>
+          <input type="text" id="f-notes" placeholder="Context, prioriteit, etc." />
+        </div>
+      </div>
+
+      <div class="mail-preview" id="mail-preview"></div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="previewMail()">👁 Bekijk mail</button>
+        <button class="btn btn-primary" onclick="saveTask()">✓ Opslaan in lijst</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: OVERZICHT -->
+  <div id="tab-overzicht" style="display:none">
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter('alle', this)">Alle</button>
+      <button class="filter-btn" onclick="setFilter('Open', this)">Open</button>
+      <button class="filter-btn" onclick="setFilter('In behandeling', this)">Bezig</button>
+      <button class="filter-btn" onclick="setFilter('Gedaan', this)">Gedaan</button>
+    </div>
+    <div class="card">
+      <div id="tasklist"></div>
+    </div>
+  </div>
+
+  <!-- TAB: DAGMAIL -->
+  <div id="tab-dagmail" style="display:none">
+    <div class="card">
+      <div class="card-label">Dagelijkse samenvatting</div>
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:14px">
+        Stuur aan het einde van de dag één overzichtsmail per persoon met al hun openstaande taken. Stel hieronder je gewenste verzendtijd in.
+      </p>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <label style="font-size:14px;font-weight:500">Verzendtijd:</label>
+        <input type="time" class="time-input" id="send-time" value="17:00" />
+        <button class="btn" style="flex:unset;padding:8px 14px" onclick="saveSendTime()">Opslaan</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-hint);margin-bottom:16px" id="timer-status">Volgende verzending wordt berekend...</div>
+      <button class="btn btn-primary" onclick="sendDailySummary()">📨 Nu versturen (preview)</button>
+    </div>
+
+    <div class="card" id="summary-preview" style="display:none">
+      <div class="card-label">Preview dagmail</div>
+      <div id="summary-content" style="font-size:13px;line-height:1.7;color:var(--text-muted)"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TEAM = {
+  'Koen': 'koen@nextsteptraining.nl',
+  'Ilona': 'davesmit@ziggo.nl',
+  'Philip': 'Among-Strong@hotmail.com',
+  'Mariska': 'mariskaruyterpt@gmail.com',
+  'Ely': 'mediabyink@gmail.com',
+  'Daan': 'hofferdaan@gmail.com'
+};
+
+let tasks = JSON.parse(localStorage.getItem('nst-tasks') || '[]');
+let taskCounter = parseInt(localStorage.getItem('nst-counter') || '1');
+let currentFilter = 'alle';
+let recognition = null;
+let isRecording = false;
+let dailyTimer = null;
+
+function saveTasks() {
+  localStorage.setItem('nst-tasks', JSON.stringify(tasks));
+  localStorage.setItem('nst-counter', String(taskCounter));
+  updateBadge();
+}
+
+function updateBadge() {
+  const open = tasks.filter(t => t.status !== 'Gedaan').length;
+  document.getElementById('open-count').textContent = open + ' open';
+}
+
+function showTab(tab) {
+  ['nieuw','overzicht','dagmail'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['nieuw','overzicht','dagmail'][i] === tab);
+  });
+  if (tab === 'overzicht') renderTasks();
+  if (tab === 'dagmail') updateTimerStatus();
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    document.getElementById('mic-status').textContent = 'Spraakherkenning niet beschikbaar. Gebruik Chrome op Android of Safari op iPhone.';
+    return;
+  }
+  if (isRecording) { recognition.stop(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'nl-NL';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('mic-btn').classList.add('recording');
+    document.getElementById('mic-icon').textContent = '⏹';
+    document.getElementById('mic-label').textContent = 'Stop opname';
+    document.getElementById('mic-status').textContent = '🔴 Luistert...';
+  };
+  recognition.onresult = e => {
+    document.getElementById('input-text').value = e.results[0][0].transcript;
+    document.getElementById('mic-status').textContent = '✓ Herkend — klik op "Analyseer taak"';
+  };
+  recognition.onerror = e => {
+    document.getElementById('mic-status').textContent = 'Fout: ' + e.error + '. Probeer opnieuw.';
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('mic-icon').textContent = '🎤';
+    document.getElementById('mic-label').textContent = 'Inspreken';
+  };
+  recognition.start();
+}
+
+async function analyzeTask() {
+  const text = document.getElementById('input-text').value.trim();
+  if (!text) { showToast('Typ of spreek eerst een opdracht in'); return; }
+  document.getElementById('ai-loading').style.display = 'flex';
+  document.getElementById('task-form').style.display = 'none';
+  document.getElementById('mail-preview').style.display = 'none';
+
+  const today = new Date().toISOString().split('T')[0];
+  const prompt = `Je bent een taakparser voor Next Step Training. Analyseer de opdracht en geef ALLEEN een JSON-object terug, geen uitleg, geen markdown.
+
+Opdracht: "${text}"
+Vandaag: ${today}
+Teamleden: Koen, Ilona, Philip, Mariska, Ely, Daan
+
+Geef terug:
+{"person":"naam uit de lijst (als onduidelijk: Koen)","task":"korte taakomschrijving max 90 tekens","deadline":"YYYY-MM-DD (schat realistisch binnen 7 dagen als niet vermeld)","notes":"extra context of lege string"}`;
+
+  try {
+    const res = await fetch('https://nst-api.nextsteptraining2015.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    document.getElementById('f-task').value = parsed.task || '';
+    document.getElementById('f-deadline').value = parsed.deadline || '';
+    document.getElementById('f-notes').value = parsed.notes || '';
+    const sel = document.getElementById('f-person');
+    for (let i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value.startsWith(parsed.person)) { sel.selectedIndex = i; break; }
+    }
+    document.getElementById('task-form').style.display = 'block';
+  } catch(e) {
+    showToast('Kon taak niet analyseren. Probeer opnieuw.');
+  } finally {
+    document.getElementById('ai-loading').style.display = 'none';
+  }
+}
+
+function getFormData() {
+  const [name, email] = document.getElementById('f-person').value.split('|');
+  return {
+    name, email,
+    task: document.getElementById('f-task').value.trim(),
+    deadline: document.getElementById('f-deadline').value,
+    notes: document.getElementById('f-notes').value.trim()
+  };
+}
+
+function formatDate(d) {
+  if (!d) return 'geen deadline';
+  return new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function buildMailBody(name, taskList) {
+  const lines = taskList.map((t, i) =>
+    `${i+1}. ${t.task}${t.deadline ? ' — deadline: ' + formatDate(t.deadline) : ''}${t.notes ? '\n   ' + t.notes : ''}`
+  ).join('\n\n');
+  return `Hoi ${name},\n\nHier is je taakoverzicht voor vandaag:\n\n${lines}\n\nLaat me weten als je vragen hebt.\n\nGroet,\nJan — Next Step Training`;
+}
+
+function previewMail() {
+  const d = getFormData();
+  if (!d.task) { showToast('Vul een taakomschrijving in'); return; }
+  const body = buildMailBody(d.name, [{ task: d.task, deadline: d.deadline, notes: d.notes }]);
+  const el = document.getElementById('mail-preview');
+  el.style.display = 'block';
+  el.innerHTML = `<strong>Aan:</strong> ${d.name} &lt;${d.email}&gt;\n<strong>Onderwerp:</strong> Taak voor jou — ${new Date().toLocaleDateString('nl-NL')}\n\n${body}`;
+}
+
+function saveTask() {
+  const d = getFormData();
+  if (!d.task) { showToast('Vul een taakomschrijving in'); return; }
+  const id = 'NST-' + String(taskCounter++).padStart(3, '0');
+  tasks.push({ id, ...d, status: 'Open', created: new Date().toISOString().split('T')[0] });
+  saveTasks();
+  document.getElementById('input-text').value = '';
+  document.getElementById('task-form').style.display = 'none';
+  document.getElementById('mail-preview').style.display = 'none';
+  document.getElementById('mic-status').textContent = '';
+  showToast('✓ Taak opgeslagen — wordt meegenomen in dagmail');
+}
+
+function renderTasks() {
+  const el = document.getElementById('tasklist');
+  let list = currentFilter === 'alle' ? tasks : tasks.filter(t => t.status === currentFilter);
+  if (list.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Geen taken gevonden</div>';
+    return;
+  }
+  list = [...list].sort((a, b) => {
+    if (!a.deadline) return 1;
+    if (!b.deadline) return -1;
+    return a.deadline.localeCompare(b.deadline);
+  });
+  el.innerHTML = list.map(t => {
+    const pillClass = t.status === 'Gedaan' ? 'pill-done' : t.status === 'In behandeling' ? 'pill-progress' : 'pill-open';
+    const overdue = t.deadline && t.status !== 'Gedaan' && new Date(t.deadline) < new Date();
+    return `<div class="task-item">
+      <div class="avatar">${t.name.substring(0,2).toUpperCase()}</div>
+      <div class="task-body">
+        <div class="task-title">${t.task}</div>
+        <div class="task-meta">
+          ${t.name} · ${t.deadline ? (overdue ? '⚠ ' : '') + formatDate(t.deadline) : 'geen deadline'}
+          <span class="status-pill ${pillClass}">${t.status}</span>
+        </div>
+        ${t.notes ? `<div style="font-size:12px;color:var(--text-hint);margin-top:2px;font-style:italic">${t.notes}</div>` : ''}
+      </div>
+      <div class="task-right">
+        <select class="status-mini" onchange="updateStatus('${t.id}', this.value)">
+          <option${t.status==='Open'?' selected':''}>Open</option>
+          <option${t.status==='In behandeling'?' selected':''}>In behandeling</option>
+          <option${t.status==='Gedaan'?' selected':''}>Gedaan</option>
+        </select>
+        <button class="icon-btn" onclick="deleteTask('${t.id}')" title="Verwijder">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateStatus(id, status) {
+  const t = tasks.find(x => x.id === id);
+  if (t) { t.status = status; saveTasks(); renderTasks(); }
+}
+
+function deleteTask(id) {
+  if (!confirm('Taak verwijderen?')) return;
+  tasks = tasks.filter(x => x.id !== id);
+  saveTasks();
+  renderTasks();
+}
+
+function saveSendTime() {
+  const t = document.getElementById('send-time').value;
+  localStorage.setItem('nst-sendtime', t);
+  updateTimerStatus();
+  scheduleDailyMail();
+  showToast('✓ Verzendtijd opgeslagen: ' + t);
+}
+
+function updateTimerStatus() {
+  const time = localStorage.getItem('nst-sendtime') || '17:00';
+  document.getElementById('send-time').value = time;
+  const [h, m] = time.split(':').map(Number);
+  const now = new Date();
+  const next = new Date();
+  next.setHours(h, m, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  const diff = next - now;
+  const hours = Math.floor(diff / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  document.getElementById('timer-status').textContent = `Volgende verzending over ${hours}u ${mins}m (om ${time})`;
+}
+
+function scheduleDailyMail() {
+  if (dailyTimer) clearTimeout(dailyTimer);
+  const time = localStorage.getItem('nst-sendtime') || '17:00';
+  const [h, m] = time.split(':').map(Number);
+  const now = new Date();
+  const next = new Date();
+  next.setHours(h, m, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  dailyTimer = setTimeout(() => {
+    sendDailySummary(true);
+    scheduleDailyMail();
+  }, next - now);
+}
+
+function sendDailySummary(auto = false) {
+  const openTasks = tasks.filter(t => t.status !== 'Gedaan');
+  if (openTasks.length === 0) {
+    showToast('Geen openstaande taken om te versturen');
+    return;
+  }
+
+  const byPerson = {};
+  openTasks.forEach(t => {
+    if (!byPerson[t.name]) byPerson[t.name] = { email: t.email, tasks: [] };
+    byPerson[t.name].tasks.push(t);
+  });
+
+  const people = Object.keys(byPerson);
+  let previewHtml = '';
+
+  people.forEach(name => {
+    const { email, tasks: ptasks } = byPerson[name];
+    const body = buildMailBody(name, ptasks);
+    const subject = `Jouw taken — ${new Date().toLocaleDateString('nl-NL')}`;
+
+    if (!auto) {
+      previewHtml += `<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--border)">
+        <strong style="color:var(--text)">${name}</strong> &lt;${email}&gt;<br>
+        <em style="font-size:12px">${subject}</em><br><br>
+        <span style="white-space:pre-wrap">${body}</span>
+      </div>`;
+    }
+
+    if (auto) {
+      window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+    }
+  });
+
+  if (!auto) {
+    const preview = document.getElementById('summary-preview');
+    document.getElementById('summary-content').innerHTML = previewHtml + `<div style="margin-top:12px">
+      <button class="btn btn-primary" onclick="sendAllMails()">📨 Verstuur naar ${people.length} persoon/personen</button>
+    </div>`;
+    preview.style.display = 'block';
+    showToast('Preview klaar — scroll naar beneden');
+  }
+}
+
+function sendAllMails() {
+  const openTasks = tasks.filter(t => t.status !== 'Gedaan');
+  const byPerson = {};
+  openTasks.forEach(t => {
+    if (!byPerson[t.name]) byPerson[t.name] = { email: t.email, tasks: [] };
+    byPerson[t.name].tasks.push(t);
+  });
+
+  Object.entries(byPerson).forEach(([name, { email, tasks: ptasks }]) => {
+    const body = buildMailBody(name, ptasks);
+    const subject = `Jouw taken — ${new Date().toLocaleDateString('nl-NL')}`;
+    window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+  });
+
+  showToast('✓ Mails geopend in je mailclient');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+updateBadge();
+renderTasks();
+scheduleDailyMail();
+updateTimerStatus();
+</script>
+</body>
+</html>
